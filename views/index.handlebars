@@ -1,0 +1,25 @@
+<div class="container">
+        <h1>WebRTC Video Chat</h1>
+        
+        <div class="controls">
+            <input type="text" id="roomInput" placeholder="Room ID" value="room1">
+            <button id="joinBtn">Join Room</button>
+            <button id="startBtn" disabled>Start Video</button>
+            <button id="stopBtn" disabled>Stop Video</button>
+        </div>
+
+        <div class="videos">
+            <div class="video-container">
+                <div class="video-label">Local Video</div>
+                <video id="localVideo" autoplay muted></video>
+            </div>
+            <div class="video-container">
+                <div class="video-label">Remote Video</div>
+                <video id="remoteVideo" autoplay></video>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/webrtc.js"></script>
+
