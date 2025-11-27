@@ -67,16 +67,30 @@ function createPeerConnection() {
   peerConnection.ontrack = e => {
     remoteVideo.srcObject = e.streams[0]
   }
+
+  peerConnection.onnegotiationneeded = async () => {
+    try {
+      const offer = await peerConnection.createOffer()
+      await peerConnection.setLocalDescription(offer)
+
+      socket.emit('offer', {
+        offer: offer,
+        room: currentRoom
+      })
+    } catch (err) {}
+  }
 }
 
 socket.on('user-joined', async () => {
-  if (!peerConnection) return
-  if (!localStream) return
+  if (!peerConnection) createPeerConnection()
 
-  const offer = await peerConnection.createOffer()
-  await peerConnection.setLocalDescription(offer)
-
-  socket.emit('offer', { offer, room: currentRoom })
+  if (localStream) {
+    localStream.getTracks().forEach(t => {
+      if (!peerConnection.getSenders().find(s => s.track === t)) {
+        peerConnection.addTrack(t, localStream)
+      }
+    })
+  }
 })
 
 socket.on('offer', async data => {
@@ -84,16 +98,21 @@ socket.on('offer', async data => {
 
   if (localStream) {
     localStream.getTracks().forEach(t => {
-      if (!peerConnection.getSenders().find(s => s.track === t))
+      if (!peerConnection.getSenders().find(s => s.track === t)) {
         peerConnection.addTrack(t, localStream)
+      }
     })
   }
 
   await peerConnection.setRemoteDescription(data.offer)
+
   const answer = await peerConnection.createAnswer()
   await peerConnection.setLocalDescription(answer)
 
-  socket.emit('answer', { answer, room: currentRoom })
+  socket.emit('answer', {
+    answer: answer,
+    room: currentRoom
+  })
 })
 
 socket.on('answer', async data => {
